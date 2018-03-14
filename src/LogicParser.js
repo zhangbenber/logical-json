@@ -1,5 +1,5 @@
 const LogicNode = require('./LogicNode');
-const { LogicNodeTypes, LinkTpyes } = require('./constants');
+const { LogicNodeTypes } = require('./constants');
 
 class LogicParser {
     
@@ -9,7 +9,8 @@ class LogicParser {
         this.output = {};
         this.nodes = {};
         this.inputNodes = [];
-        this.constDrivenNodes = [];
+        this.outputNodes = [];
+        this.dependenceSeq = [];
         this.initial = true;
 
         if (typeof object === 'string') {
@@ -34,6 +35,12 @@ class LogicParser {
             this.setConst(constant);
         });
 
+        this.outputNodes.forEach(output => {
+            this.collectDependence(output);
+        });
+
+        console.log(this.dependenceSeq.map(n => n.id));
+        
     }
 
     addNodes(arr, type = LogicNodeTypes.TYPE_NORMAL) {
@@ -44,6 +51,8 @@ class LogicParser {
                 this.nodes[id] = newNode;
                 if (type == LogicNodeTypes.TYPE_INPUT) {
                     this.inputNodes.push(newNode);
+                } else if (type == LogicNodeTypes.TYPE_OUTPUT) {
+                    this.outputNodes.push(newNode);
                 }
             });
         }
@@ -66,12 +75,21 @@ class LogicParser {
 
     setConst(constant) {
         let [value, port] = constant;
-        let output = this.processPort(port);
-        let node = this.nodes[output.id];
-        node.input[output.name] = value;
-        if (this.constDrivenNodes.indexOf(node) < 0) {
-            this.constDrivenNodes.push(node);
+        let constPort = this.processPort(port);
+        let node = this.nodes[constPort.id];
+        node.input[constPort.name] = value;
+    }
+
+    collectDependence(node) {
+        let oldIndex = this.dependenceSeq.indexOf(node);
+        if (oldIndex > -1) {
+            this.dependenceSeq.splice(oldIndex, 1);
         }
+        this.dependenceSeq.unshift(node);
+        node.in.forEach(link => {
+            let dependentNode = this.nodes[link.id];
+            this.collectDependence(dependentNode);
+        });
     }
 
     run(input, initial = false) {
@@ -85,12 +103,46 @@ class LogicParser {
             this.initial = false;
         }
 
-        this.output = {};
+        
         if (initial) {
+            
             this.input = input;
-            this.constDrivenNodes.forEach(node => node.run());
+            this.dependenceSeq.forEach(node => {
+                node.run();
+            });
+
+        } else {
+
+            let changedKeys = [];
+            for (const key in input) {
+                if (input.hasOwnProperty(key)) {
+                    this.input[key] = input[key];
+                    changedKeys.push(key);
+                }
+            }
+
+            let pendingNodes = [];
+            let getPendingNodes = rootNode => {
+                pendingNodes.push(rootNode);
+                rootNode.out.forEach(link => {
+                    let nextNode = this.nodes[link.id];
+                    getPendingNodes(nextNode);
+                });
+            }
+            this.inputNodes.forEach(input => {
+                if (changedKeys.indexOf(input.name) > -1) {
+                    getPendingNodes(input);
+                }
+            });
+
+            this.dependenceSeq.forEach(node => {
+                if (pendingNodes.indexOf(node) > -1) {
+                    node.run();
+                }
+            });
+
         }
-        this.inputNodes.forEach(node => node.run());
+
         return this.output;
     }
 

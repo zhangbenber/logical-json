@@ -1,5 +1,5 @@
 const functionMap = require('./functions');
-const { LogicNodeTypes, LinkTpyes } = require('./constants');
+const { LogicNodeTypes } = require('./constants');
 
 class LogicNode {
     
@@ -44,23 +44,26 @@ class LogicNode {
                 let name = this.name;
                 let value = this.logicParser.input[name];
                 this.output[name] = value;
-                this.goNextNode();
+                console.log(this.id, this.input, this.output);
+                this.passToNextNodes();
                 break;
             case LogicNodeTypes.TYPE_NORMAL:
                 this.output = this.func(this.input);
-                this.goNextNode();
+                console.log(this.id, this.input, this.output);
+                this.passToNextNodes();
                 break;
             case LogicNodeTypes.TYPE_OUTPUT:
                 this.logicParser.onOutput({
                     key: this.name,
                     value: this.input[this.name]
                 });
+                console.log(this.id, this.input, this.output);
                 break;
         }
 
     }
 
-    goNextNode() {
+    passToNextNodes() {
         let pendingNodes = [];
         this.out.forEach(link => {
             let nextNode = this.logicParser.nodes[link.id];
@@ -69,7 +72,6 @@ class LogicNode {
                 pendingNodes.push(nextNode);
             }
         });
-        pendingNodes.forEach(node => node.run());
     }
 
 }
