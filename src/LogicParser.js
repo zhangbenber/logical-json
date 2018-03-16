@@ -2,11 +2,12 @@ const LogicNode = require('./LogicNode');
 const { LogicNodeTypes } = require('./constants');
 
 class LogicParser {
-    
+
     constructor(object) {
         this.invalid = false;
         this.input = {};
         this.output = {};
+        this.changedOutput = {};
         this.nodes = {};
         this.inputNodes = [];
         this.outputNodes = [];
@@ -21,17 +22,17 @@ class LogicParser {
             }
         }
 
-        this.addNodes(object.n);
-        this.addNodes(object.i, LogicNodeTypes.TYPE_INPUT);
-        this.addNodes(object.o, LogicNodeTypes.TYPE_OUTPUT);
+        this.addNodes(object.n || []);
+        this.addNodes(object.i || [], LogicNodeTypes.TYPE_INPUT);
+        this.addNodes(object.o || [], LogicNodeTypes.TYPE_OUTPUT);
 
-        object.l.forEach(link => {
+        (object.l || []).forEach(link => {
             let [source, target] = link.map(this.processPort.bind(this));
             this.nodes[source.id].linkOut(source.name, target);
             this.nodes[target.id].linkIn(target.name, source);
         });
 
-        object.c.forEach(constant => {
+        (object.c || []).forEach(constant => {
             this.setConst(constant);
         });
 
@@ -39,8 +40,6 @@ class LogicParser {
             this.collectDependence(output);
         });
 
-        console.log(this.dependenceSeq.map(n => n.id));
-        
     }
 
     addNodes(arr, type = LogicNodeTypes.TYPE_NORMAL) {
@@ -103,15 +102,17 @@ class LogicParser {
             this.initial = false;
         }
 
-        
+
         if (initial) {
-            
+
             this.input = input;
             this.dependenceSeq.forEach(node => {
                 node.run();
             });
 
         } else {
+
+            this.changedOutput = {};
 
             let changedKeys = [];
             for (const key in input) {
@@ -131,19 +132,20 @@ class LogicParser {
             }
             this.inputNodes.forEach(input => {
                 if (changedKeys.indexOf(input.name) > -1) {
+                    input.dirty = true;
                     getPendingNodes(input);
                 }
             });
 
             this.dependenceSeq.forEach(node => {
-                if (pendingNodes.indexOf(node) > -1) {
+                if (pendingNodes.indexOf(node) > -1 && node.dirty) {
                     node.run();
                 }
             });
 
         }
 
-        return this.output;
+        return this.changedOutput;
     }
 
     onError(msg) {
@@ -153,6 +155,7 @@ class LogicParser {
 
     onOutput({ key, value }) {
         this.output[key] = value;
+        this.changedOutput[key] = value;
     }
 
 }

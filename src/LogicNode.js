@@ -1,8 +1,10 @@
+const equal = require('fast-deep-equal');
+
 const functionMap = require('./functions');
 const { LogicNodeTypes } = require('./constants');
 
 class LogicNode {
-    
+
     constructor(logicParser, id, type, name) {
         this.logicParser = logicParser;
         this.type = type;
@@ -25,15 +27,16 @@ class LogicNode {
         this.in = [];
         this.out = [];
         this.dependence = [];
+        this.dirty = true;
     }
-    
+
     linkOut(selfName, port) {
         this.out.push({ ...port, selfName });
     }
-    
+
     linkIn(selfName, port) {
-        if (this.in.find(o => (o.name == port.name))) {
-            this.logicParser.onError(`Ducupited inputs into ${name} on node #${this.id}`);
+        if (this.in.find(o => (o.selfName == selfName))) {
+            this.logicParser.onError(`Ducupited inputs into ${selfName} on node #${this.id}`);
         }
         this.in.push({ ...port, selfName });
     }
@@ -43,23 +46,27 @@ class LogicNode {
             case LogicNodeTypes.TYPE_INPUT:
                 let name = this.name;
                 let value = this.logicParser.input[name];
-                this.output[name] = value;
-                console.log(this.id, this.input, this.output);
-                this.passToNextNodes();
+                if (!equal(this.output[name], value)) {
+                    this.output[name] = value;
+                    this.passToNextNodes();
+                }
                 break;
             case LogicNodeTypes.TYPE_NORMAL:
-                this.output = this.func(this.input);
-                console.log(this.id, this.input, this.output);
-                this.passToNextNodes();
+                let output = this.func(this.input);
+                if (!equal(this.output, output)) {
+                    this.output = output;
+                    this.passToNextNodes();
+                }
                 break;
             case LogicNodeTypes.TYPE_OUTPUT:
                 this.logicParser.onOutput({
                     key: this.name,
                     value: this.input[this.name]
                 });
-                console.log(this.id, this.input, this.output);
                 break;
         }
+
+        this.dirty = false;
 
     }
 
@@ -71,6 +78,7 @@ class LogicNode {
             if (pendingNodes.indexOf(nextNode) < 0) {
                 pendingNodes.push(nextNode);
             }
+            nextNode.dirty = true;
         });
     }
 

@@ -53,3 +53,5 @@ console.log(parser.run({
 console.log(parser.run({
     bol: false
 }));
+
+module.exports = LogicParser;
