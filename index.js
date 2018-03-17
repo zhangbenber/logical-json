@@ -1,3 +1,3 @@
-const LogicParser = require('./src/LogicParser');
+const LogicParser = require('./lib/LogicParser');
 
 module.exports = LogicParser;
