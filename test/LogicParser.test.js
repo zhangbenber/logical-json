@@ -12,17 +12,17 @@ describe('LogicParser', () => {
         ],
     
         /** Output nodes
-            [ id, name ] **/
+            [ id, name, constInputValue? ] **/
         o: [
             [3, 'out'],
-            [6, 'const'],
+            [6, 'const', 20],
         ],
         
         /** Functional nodes
-            [ id, functionName ] **/
+            [ id, functionName, { constInputPortName: constInputValue }? ] **/
         n: [
             [4, 'and'],
-            [5, 'cmp'],
+            [5, 'cmp', { 'in.2': 10, opt: 'gt' }],
         ],
         
         /** Links
@@ -35,17 +35,6 @@ describe('LogicParser', () => {
             [2, [5, 'in.1']],
             [[5, 'out'], [4, 'in.2']],
             [[4, 'out'], 3],
-        ],
-        
-        /** Constants
-            [
-                constantValue,
-                [destinationFunctionalNodeId, destinationInputPortName] | destinationOutputNodeId
-            ] **/
-        c: [
-            [10, [5, 'in.2']],
-            ['gt', [5, 'opt']],
-            [20, 6],
         ]
     });
     
