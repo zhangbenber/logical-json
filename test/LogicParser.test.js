@@ -22,7 +22,7 @@ describe('LogicParser', () => {
             [ id, functionName ] **/
         n: [
             [4, 'and'],
-            [5, 'greaterThan'],
+            [5, 'cmp'],
         ],
         
         /** Links
@@ -31,9 +31,9 @@ describe('LogicParser', () => {
                 [destinationFunctionalNodeId, destinationInputPortName] | destinationOutputNodeId
             ] **/
         l: [
-            [1, [4, 'a']],
-            [2, [5, 'target']],
-            [[5, 'out'], [4, 'b']],
+            [1, [4, 'in.1']],
+            [2, [5, 'in.1']],
+            [[5, 'out'], [4, 'in.2']],
             [[4, 'out'], 3],
         ],
         
@@ -43,7 +43,8 @@ describe('LogicParser', () => {
                 [destinationFunctionalNodeId, destinationInputPortName] | destinationOutputNodeId
             ] **/
         c: [
-            [10, [5, 'standard']],
+            [10, [5, 'in.2']],
+            ['gt', [5, 'opt']],
             [20, 6],
         ]
     });
