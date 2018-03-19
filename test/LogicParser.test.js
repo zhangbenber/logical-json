@@ -62,4 +62,19 @@ describe('LogicParser', () => {
         assert.deepEqual(changedResult, {});
     });
 
+    it('Should resolve immediately for async runs without async nodes', async () => {
+        let runResult = await parser.run({
+            bol: true,
+            val: 100
+        }, true);
+        assert.deepEqual(runResult, { const: 20, out: true });
+    });
+
+    it('Should resolve immediately for async changes without async nodes', async () => {
+        let changedResult = await parser.change({
+            bol: false
+        }, true);
+        assert.deepEqual(changedResult, { out: false });
+    });
+
 })
