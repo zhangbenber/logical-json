@@ -11,12 +11,12 @@ describe('`and` function', () => {
 	});
 
 	it('Should return true if inputs are all truthy', () => {
-		assert.deepEqual(parser.run({ a: true, b: 1, c: 'test' }), { o: true });
+		assert.deepStrictEqual(parser.run({ a: true, b: 1, c: 'test' }), { o: true });
 	});
 
 	it('Should return false if any of inputs are falsy', () => {
-		assert.deepEqual(parser.run({ a: true, b: false, c: 'test' }), { o: false });
-		assert.deepEqual(parser.run({ a: 0, b: 1, c: 2 }), { o: false });
+		assert.deepStrictEqual(parser.run({ a: true, b: false, c: 'test' }), { o: false });
+		assert.deepStrictEqual(parser.run({ a: 0, b: 1, c: 2 }), { o: false });
 	});
 
 });
@@ -32,12 +32,12 @@ describe('`or` function', () => {
 	});
 
 	it('Should return false if all inputs are all falsy', () => {
-		assert.deepEqual(parser.run({ a: 0, b: false, c: '' }), { o: false });
+		assert.deepStrictEqual(parser.run({ a: 0, b: false, c: '' }), { o: false });
 	});
 
 	it('Should return true if any of inputs are truthy', () => {
-		assert.deepEqual(parser.run({ a: 0, b: false, c: 'test' }), { o: true });
-		assert.deepEqual(parser.run({ a: 1, b: 0, c: '' }), { o: true });
+		assert.deepStrictEqual(parser.run({ a: 0, b: false, c: 'test' }), { o: true });
+		assert.deepStrictEqual(parser.run({ a: 1, b: 0, c: '' }), { o: true });
 	});
 
 });
@@ -53,15 +53,15 @@ describe('`eq` function', () => {
 	});
 
 	it('Should return true if all inputs are logical equal when not strict', () => {
-		assert.deepEqual(parser.run({ i: [1, '1', 1], strict: false }), { o: true });
-		assert.deepEqual(parser.run({ i: [0, false, '0'], strict: false }), { o: true });
-		assert.deepEqual(parser.run({ i: [1, false, '0'], strict: false }), { o: false });
-		assert.deepEqual(parser.run({ i: [NaN, NaN, NaN], strict: false }), { o: false });
+		assert.deepStrictEqual(parser.run({ i: [1, '1', 1], strict: false }), { o: true });
+		assert.deepStrictEqual(parser.run({ i: [0, false, '0'], strict: false }), { o: true });
+		assert.deepStrictEqual(parser.run({ i: [1, false, '0'], strict: false }), { o: false });
+		assert.deepStrictEqual(parser.run({ i: [NaN, NaN, NaN], strict: false }), { o: false });
 	});
 
 	it('Should return true if all inputs are strictly equal when strict', () => {
-		assert.deepEqual(parser.run({ i: ['0', '0', '0'], strict: true }), { o: true });
-		assert.deepEqual(parser.run({ i: [0, false, '0'], strict: true }), { o: false });
+		assert.deepStrictEqual(parser.run({ i: ['0', '0', '0'], strict: true }), { o: true });
+		assert.deepStrictEqual(parser.run({ i: [0, false, '0'], strict: true }), { o: false });
 	});
 
 });
@@ -77,27 +77,27 @@ describe('`cmp` function', () => {
 	});
 
 	it('Should work for greater than operation', () => {
-		assert.deepEqual(parser.run({ i: [3, 2, 1], opt: 'gt' }), { o: true });
-		assert.deepEqual(parser.run({ i: [3, 2, 2], opt: 'gt' }), { o: false });
+		assert.deepStrictEqual(parser.run({ i: [3, 2, 1], opt: 'gt' }), { o: true });
+		assert.deepStrictEqual(parser.run({ i: [3, 2, 2], opt: 'gt' }), { o: false });
 	});
 
 	it('Should work for greater than or euqal operation', () => {
-		assert.deepEqual(parser.run({ i: [2, 2, 2], opt: 'gte' }), { o: true });
-		assert.deepEqual(parser.run({ i: [3, 2, 3], opt: 'gte' }), { o: false });
+		assert.deepStrictEqual(parser.run({ i: [2, 2, 2], opt: 'gte' }), { o: true });
+		assert.deepStrictEqual(parser.run({ i: [3, 2, 3], opt: 'gte' }), { o: false });
 	});
 
 	it('Should work for less than operation', () => {
-		assert.deepEqual(parser.run({ i: [1, 2, 3], opt: 'lt' }), { o: true });
-		assert.deepEqual(parser.run({ i: [2, 2, 3], opt: 'lt' }), { o: false });
+		assert.deepStrictEqual(parser.run({ i: [1, 2, 3], opt: 'lt' }), { o: true });
+		assert.deepStrictEqual(parser.run({ i: [2, 2, 3], opt: 'lt' }), { o: false });
 	});
 
 	it('Should work for less than operation or euqal operation', () => {
-		assert.deepEqual(parser.run({ i: [2, 2, 2], opt: 'lte' }), { o: true });
-		assert.deepEqual(parser.run({ i: [3, 2, 3], opt: 'lte' }), { o: false });
+		assert.deepStrictEqual(parser.run({ i: [2, 2, 2], opt: 'lte' }), { o: true });
+		assert.deepStrictEqual(parser.run({ i: [3, 2, 3], opt: 'lte' }), { o: false });
 	});
 
 	it('Should always return false for unknown operations', () => {
-		assert.deepEqual(parser.run({ i: [2, 2, 2], opt: 'test' }), { o: false });
+		assert.deepStrictEqual(parser.run({ i: [2, 2, 2], opt: 'test' }), { o: false });
 	});
 
 });
