@@ -11,28 +11,28 @@ describe('LogicParser', () => {
         })
     });
 
-    let parser = new LogicParser({
+    const syncLogic = {
         /** Input nodes
             [ id, name ] **/
         i: [
             [1, 'bol'],
             [2, 'val']
         ],
-    
+
         /** Output nodes
             [ id, name, constInputValue? ] **/
         o: [
             [3, 'out'],
             [6, 'const', 20],
         ],
-        
+
         /** Functional nodes
             [ id, functionName, { constInputPortName: constInputValue }? ] **/
         n: [
             [4, 'and'],
             [5, 'cmp', { 'in.2': 10, opt: 'gt' }],
         ],
-        
+
         /** Links
             [
                 [sourceFunctionalNodeId, sourcOutputPortName] | sourceInputNodeId,
@@ -44,10 +44,19 @@ describe('LogicParser', () => {
             [[5, 'out'], [4, 'in.2']],
             [[4, 'out'], 3],
         ]
-    });
+    };
+
+    const asyncLogic = {
+        i: [[0, 'i']],
+        o: [[1, 'o']],
+        n: [[2, 'waitAndPlus', { ms: 20 }]],
+        l: [[0, [2, 'input']], [[2, 'output'], 1]]
+    }
+
+    let syncParser = new LogicParser(syncLogic);
     
     it('Should run on specified input', () => {
-        let runResult = parser.run({
+        let runResult = syncParser.run({
             bol: true,
             val: 100
         });
@@ -55,14 +64,14 @@ describe('LogicParser', () => {
     });
 
     it('Should response on input changes', () => {
-        let changedResult = parser.change({
+        let changedResult = syncParser.change({
             bol: false
         });
         assert.deepStrictEqual(changedResult, { out: false });
     });
 
     it('Should return an empty object when input changes do not impact outputs', () => {
-        let changedResult = parser.change({
+        let changedResult = syncParser.change({
             const: 20,
             bol: false,
             val: 80
@@ -70,31 +79,28 @@ describe('LogicParser', () => {
         assert.deepStrictEqual(changedResult, {});
     });
 
+    let asyncParser1 = new LogicParser(syncLogic, { async: true });
+
     it('Should resolve immediately for async runs without async nodes', async () => {
-        let runResult = await parser.run({
+        let runResult = await asyncParser1.run({
             bol: true,
             val: 100
-        }, true);
+        });
         assert.deepStrictEqual(runResult, { const: 20, out: true });
     });
 
     it('Should resolve immediately for async changes without async nodes', async () => {
-        let changedResult = await parser.change({
+        let changedResult = await asyncParser1.change({
             bol: false
-        }, true);
+        });
         assert.deepStrictEqual(changedResult, { out: false });
     });
 
-    let asyncParser = new LogicParser({
-        i: [[0, 'i']],
-        o: [[1, 'o']],
-        n: [[2, 'waitAndPlus', { ms: 20 }]],
-        l: [[0, [2, 'input']], [[2, 'output'], 1]]
-    });
+    let asyncParser2 = new LogicParser(asyncLogic, { async: true });
 
     it('Should resolve after a moment for async runs with async nodes', async () => {
         let start = new Date().getTime();
-        let runResult = await asyncParser.run({ i: 1 }, true);
+        let runResult = await asyncParser2.run({ i: 1 });
         assert.deepStrictEqual(runResult, { o: 2 });
         let duration = new Date().getTime() - start;
         assert.equal(duration >= 20, true);
@@ -102,10 +108,48 @@ describe('LogicParser', () => {
 
     it('Should resolve after a moment for async changes with async nodes', async () => {
         let start = new Date().getTime();
-        let changedResult = await asyncParser.change({ i: 2 }, true);
+        let changedResult = await asyncParser2.change({ i: 2 });
         assert.deepStrictEqual(changedResult, { o: 3 });
         let duration = new Date().getTime() - start;
         assert.equal(duration >= 20, true);
     });
 
+    it('Should merge output of an unfinished async run into a new-started one\'s', () => {
+        return new Promise((resolve, reject) => {
+
+            let parser = new LogicParser({
+                i: [[1, 'a'], [2, 'b']],
+                o: [[3, 'o']],
+                n: [
+                    [4, 'waitAndPlus', { ms: 20 }],
+                    [5, 'waitAndPlus', { ms: 20 }],
+                    [6, 'cmp', { opt: 'gt', 'in.2': 2 }],
+                    [7, 'cmp', { opt: 'gt', 'in.2': 2 }],
+                    [8, 'and']
+                ],
+                l: [
+                    [1, [4, 'input']],
+                    [2, [5, 'input']],
+                    [[4, 'output'], [6, 'in.1']],
+                    [[5, 'output'], [7, 'in.1']],
+                    [[6, 'out'], [8, 'in.1']],
+                    [[7, 'out'], [8, 'in.2']],
+                    [[8, 'out'], 3],
+                ]
+            }, { async: true });
+            parser.run({ a: 1, b: 2 }).then(output => {
+                reject(new Error('The unfinished async runs should not resolve'));
+            });
+            setTimeout(() => {
+                parser.change({ a: 2 }).then(output => {
+                    try {
+                        assert.deepStrictEqual(output, { o: true });
+                        resolve();
+                    } catch(e) {
+                        reject(e);
+                    }
+                });
+            }, 10);
+        });
+    });
 })
