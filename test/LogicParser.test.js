@@ -64,14 +64,14 @@ describe('LogicParser', () => {
     });
 
     it('Should response on input changes', () => {
-        let changedResult = syncParser.change({
+        let changedResult = syncParser.mutate({
             bol: false
         });
         assert.deepStrictEqual(changedResult, { out: false });
     });
 
     it('Should return an empty object when input changes do not impact outputs', () => {
-        let changedResult = syncParser.change({
+        let changedResult = syncParser.mutate({
             const: 20,
             bol: false,
             val: 80
@@ -90,7 +90,7 @@ describe('LogicParser', () => {
     });
 
     it('Should resolve immediately for async changes without async nodes', async () => {
-        let changedResult = await asyncParser1.change({
+        let changedResult = await asyncParser1.mutate({
             bol: false
         });
         assert.deepStrictEqual(changedResult, { out: false });
@@ -108,7 +108,7 @@ describe('LogicParser', () => {
 
     it('Should resolve after a moment for async changes with async nodes', async () => {
         let start = new Date().getTime();
-        let changedResult = await asyncParser2.change({ i: 2 });
+        let changedResult = await asyncParser2.mutate({ i: 2 });
         assert.deepStrictEqual(changedResult, { o: 3 });
         let duration = new Date().getTime() - start;
         assert.equal(duration >= 20, true);
@@ -141,7 +141,7 @@ describe('LogicParser', () => {
                 reject(new Error('The unfinished async runs should not resolve'));
             });
             setTimeout(() => {
-                parser.change({ a: 2 }).then(output => {
+                parser.mutate({ a: 2 }).then(output => {
                     try {
                         assert.deepStrictEqual(output, { o: true });
                         resolve();

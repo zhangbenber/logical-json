@@ -69,7 +69,8 @@ describe('Math Functions', () => {
         });
 
         it('Should return NaN when numerator and denominator are both 0', () => {
-            assert.deepStrictEqual(parser.run({ a: 0, b: 0 }), { o: NaN });
+            let output = parser.run({ a: 0, b: 0 });
+            assert.notEqual(output.o, output.o);
         });
 
     });
