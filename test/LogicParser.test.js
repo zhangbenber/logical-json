@@ -141,7 +141,8 @@ describe('LogicParser', () => {
                 reject(new Error('The unfinished async runs should not resolve'));
             });
             setTimeout(() => {
-                parser.mutate({ a: 2 }).then(output => {
+                parser.run({ a: 2, b: 2 }).then(output => {
+                    // TODO: Handle async mutate
                     try {
                         assert.deepStrictEqual(output, { o: true });
                         resolve();
