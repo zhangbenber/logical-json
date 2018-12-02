@@ -1,6 +1,6 @@
 {
   "name": "logical-json",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A structurized logic executer in JavaScript.",
   "main": "index.js",
   "scripts": {

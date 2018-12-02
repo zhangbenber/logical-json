@@ -16,7 +16,7 @@ This is a JavaScript logic executer for a set of rules described by JSON, witch 
 
 ### Basic Usage
 
-```
+```javascript
 const LogicalJson = require ('logical-json');
 
 let parser = new LogicalJson({
@@ -38,11 +38,21 @@ Note that `mutate` only returns outputs infected by the mutation. If none of the
 
 You can pass a configuration object as the second parameter into the constructor, in which you can run this in async mode:
 
-```
+```javascript
 let parser = new LogicalJson({ /* JSON here */ }, { async: true });
 ```
 
 `parser.run()` and `parser.mutate()` will return a promise in async mode. Some of rules containing async operations can only be run in this mode.
+
+### Aware of part of outputs
+
+`awareOf` is useful when you only want to know part of outputs in your application. This may help when you need higher performance, since calculations for the unconcerned outputs are ignored:
+
+```javascript
+let parser = new LogicalJson({ /* JSON here */ }, { awareOf: ['some', 'important', 'keys'] });
+```
+
+`parser.run()` and `parser.mutate()` will only return keys in `awareOf` if present.
 
 ## About the JSON Structure
 

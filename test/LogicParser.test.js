@@ -3,12 +3,18 @@ const LogicParser = require('../');
 
 describe('LogicParser', () => {
 
+    let touchedFlag = false;
+
     LogicParser.extend({
         waitAndPlus: ({ input, ms }) => new Promise(resolve => {
             setTimeout(() => {
                 resolve({ output: input + 1 })
             }, ms);
-        })
+        }),
+        neverTouch: (input) => {
+            touchedFlag = true;
+            return ({ out: input.in });
+        }
     });
 
     const syncLogic = {
@@ -52,6 +58,31 @@ describe('LogicParser', () => {
         n: [[2, 'waitAndPlus', { ms: 20 }]],
         l: [[0, [2, 'input']], [[2, 'output'], 1]]
     }
+
+    const awareOfLogic = {
+        i: [
+            [1, 'a'],
+            [2, 'b']
+        ],
+        o: [
+            [6, 'sum'],
+            [7, 'diff'],
+        ],
+        n: [
+            [3, 'add'],
+            [4, 'sub'],
+            [5, 'neverTouch'],
+        ],
+        l: [
+            [1, [3, 'in.1']],
+            [2, [3, 'in.2']],
+            [1, [4, 'a']],
+            [2, [4, 'b']],
+            [[3, 'out'], 6],
+            [[4, 'out'], [5, 'in']],
+            [[5, 'out'], 7],
+        ]
+    };
 
     let syncParser = new LogicParser(syncLogic);
     
@@ -153,4 +184,24 @@ describe('LogicParser', () => {
             }, 10);
         });
     });
-})
+
+    let awareOfParser = new LogicParser(awareOfLogic, { awareOf: ['sum'] });
+
+    it('Should not calculate outputs which is not aware of', async () => {
+        let runResult = awareOfParser.run({
+            a: 2,
+            b: 1
+        });
+        assert.deepStrictEqual(runResult, { sum: 3 });
+        assert.strictEqual(touchedFlag, false);
+    });
+
+    it('Should not calculate outputs which is not aware of when mutating', async () => {
+        let changedResult = awareOfParser.mutate({
+            b: 2
+        });
+        assert.deepStrictEqual(changedResult, { sum: 4 });
+        assert.strictEqual(touchedFlag, false);
+    });
+
+});
